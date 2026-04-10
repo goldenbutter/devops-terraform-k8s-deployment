@@ -33,9 +33,9 @@ resource "aws_instance" "main" {
   vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = var.iam_instance_profile
 
-  # 20 GB gp3 root volume — enough for Docker images and kind.
+  # 30 GB gp3 root volume — AMI requires >=30 GB; enough for Docker images and kind.
   root_block_device {
-    volume_size = 20
+    volume_size = 30
     volume_type = "gp3"
   }
 

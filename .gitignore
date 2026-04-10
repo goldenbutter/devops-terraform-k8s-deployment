@@ -41,3 +41,6 @@ Thumbs.db
 
 # kind cluster config (local only)
 kind-config.yaml
+
+# EC2 folder — contains .pem keys and local-only files
+/ec2/
