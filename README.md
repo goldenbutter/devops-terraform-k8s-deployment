@@ -10,6 +10,7 @@ Production-grade DevOps pipeline that provisions AWS infrastructure with Terrafo
 | [Terraform Setup](docs/terraform-setup.md) | Step-by-step AWS CLI setup, Terraform init/plan/apply, and SSH access |
 | [Scaling Tests](docs/scaling-tests.md) | How to test HPA and VPA with commands and expected results |
 | [Monitoring Dashboards](docs/monitoring-dashboards.md) | Accessing Grafana, importing dashboards, and key metrics to watch |
+| [EC2 Testing Guide](docs/ec2-testing-guide.md) | Full walkthrough: Terraform → EC2 → kind → deploy → load test → HPA/VPA |
 
 ## Architecture
 
@@ -184,7 +185,7 @@ kubectl describe vpa devops-api
 
 ## Screenshots
 
-### API Responses
+### Local (kind) — API Responses
 
 **Health Check** — `GET /`
 
@@ -198,7 +199,7 @@ kubectl describe vpa devops-api
 
 ![API Calc Response](assets/images/api-calc-response.png)
 
-### Kubernetes Cluster
+### Local (kind) — Kubernetes Cluster
 
 **Running Pods**
 
@@ -208,7 +209,7 @@ kubectl describe vpa devops-api
 
 ![HPA and Services](assets/images/hpa-and-services.png)
 
-### Monitoring Stack
+### Local (kind) — Monitoring Stack
 
 **Grafana Home** — Auto-provisioned Prometheus datasource
 
@@ -222,6 +223,62 @@ kubectl describe vpa devops-api
 
 ![Grafana Explore Metrics](assets/images/grafana-explore-metrics.png)
 
+### AWS EC2 — API Responses
+
+**Health Check** — `GET /` on EC2
+
+![EC2 API Health Check](assets/images/ec2-api-health-check.png)
+
+**System Info** — `GET /api/data` on EC2
+
+![EC2 API Data Response](assets/images/ec2-api-data-response.png)
+
+**CPU-Intensive Calculation** — `GET /api/calc` on EC2
+
+![EC2 API Calc Response](assets/images/ec2-api-calc-response.png)
+
+### AWS EC2 — Kubernetes Cluster
+
+**Running Pods** — All 4 pods healthy on EC2 (t3.medium, us-east-1)
+
+![EC2 kubectl pods](assets/images/ec2-kubectl-pods.png)
+
+**HPA & Services** — Autoscaler and services on EC2
+
+![EC2 HPA and Services](assets/images/ec2-hpa-and-services.png)
+
+### AWS EC2 — Monitoring Stack
+
+**Grafana Home** — Accessible at `http://<ec2-ip>:30300`
+
+![EC2 Grafana Home](assets/images/ec2-grafana-home.png)
+
+**Grafana Datasource** — Prometheus auto-provisioned on EC2
+
+![EC2 Grafana Datasource](assets/images/ec2-grafana-datasource.png)
+
+**Grafana Explore** — Live `http_requests_total` metrics from the EC2 deployment
+
+![EC2 Grafana Explore Metrics](assets/images/ec2-grafana-explore-metrics.png)
+
+### AWS EC2 — HPA Autoscaling Demo
+
+**Idle State** — 2 replicas, CPU at 2% (well below 50% threshold)
+
+![EC2 HPA Idle](assets/images/ec2-hpa-idle.png)
+
+**Under Load** — HPA scales 2→5 pods as CPU hits 120% from `/api/calc` load test
+
+![EC2 HPA Scaling](assets/images/ec2-hpa-scaling.png)
+
+**Grafana — Request Rate Spike** — `rate(http_requests_total[1m])` shows the load test burst
+
+![EC2 Grafana Load Spike](assets/images/ec2-grafana-load-spike.png)
+
+**VPA Recommendations** — Right-sizing suggestions (Off mode, no auto-apply)
+
+![EC2 VPA Recommendations](assets/images/ec2-vpa-recommendations.png)
+
 ## Tech Stack
 
 | Category        | Technology                          |
@@ -234,6 +291,12 @@ kubectl describe vpa devops-api
 | CI/CD          | GitHub Actions                      |
 | Cloud          | AWS (EC2 free-tier, VPC)            |
 | Autoscaling    | HPA (CPU/Memory) + VPA              |
+
+## Contributing
+
+Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) before submitting a PR.
+
+**Key rules:** Always create an issue first, use feature branches, never push to `main` directly.
 
 ## License
 
