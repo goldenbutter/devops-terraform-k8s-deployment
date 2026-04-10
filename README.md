@@ -24,6 +24,7 @@ Production-grade DevOps pipeline that provisions AWS infrastructure with Terrafo
 - **Kubernetes Manifests** — Deployment, Service, Ingress, ConfigMap with resource limits
 - **HPA Autoscaling** — Scales 2→10 pods based on CPU (>50%) and memory (>70%) utilization
 - **VPA Recommendations** — Right-sizing suggestions without auto-applying changes
+- **Helm Chart** — Single-command deployment of the full stack (app, monitoring, autoscaling)
 - **Kustomize Overlays** — Dev (1 replica, low resources) and Prod (3 replicas, higher limits)
 - **Prometheus + Grafana** — Auto-provisioned datasource, ready for dashboard imports
 - **Terraform IaC** — VPC, subnet, security groups, IAM, EC2 with user-data bootstrapping
@@ -36,6 +37,7 @@ Production-grade DevOps pipeline that provisions AWS infrastructure with Terrafo
 - [Docker](https://docs.docker.com/get-docker/)
 - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Helm](https://helm.sh/docs/intro/install/) 3.x (optional — for Helm-based deployment)
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) 1.5+ (for AWS deployment)
 - [AWS CLI](https://aws.amazon.com/cli/) (for AWS deployment)
 
@@ -64,6 +66,32 @@ curl http://localhost:8080/api/data
 bash scripts/load-test.sh
 kubectl get hpa devops-api -w
 ```
+
+## Deploy with Helm (Alternative)
+
+The project includes a Helm chart that packages all K8s manifests (app, monitoring, autoscaling) into a single deployable unit.
+
+```bash
+# Preview rendered templates
+helm template devops-api deploy/helm/devops-api
+
+# Install to current cluster
+helm install devops-api deploy/helm/devops-api
+
+# Install with custom values (e.g. prod with higher resources)
+helm install devops-api deploy/helm/devops-api \
+  --set replicaCount=3 \
+  --set resources.requests.cpu=100m \
+  --set resources.limits.cpu=500m
+
+# Upgrade after changes
+helm upgrade devops-api deploy/helm/devops-api
+
+# Uninstall
+helm uninstall devops-api
+```
+
+The chart deploys: Deployment, Service, Ingress, ConfigMap, HPA, VPA, Prometheus, and Grafana — all configurable via `deploy/helm/devops-api/values.yaml`.
 
 ## Deploy to AWS
 
@@ -110,6 +138,10 @@ devops-terraform-k8s-deployment/
 │   ├── go.mod                    # Go module definition
 │   └── go.sum                    # Dependency checksums
 ├── deploy/
+│   ├── helm/devops-api/          # Helm chart (alternative to raw manifests)
+│   │   ├── Chart.yaml            # Chart metadata
+│   │   ├── values.yaml           # Default configuration values
+│   │   └── templates/            # Templated K8s manifests
 │   ├── k8s/
 │   │   ├── base/                 # Core K8s manifests
 │   │   │   ├── deployment.yaml   # 2-replica deployment with probes

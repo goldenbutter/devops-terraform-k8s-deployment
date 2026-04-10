@@ -18,6 +18,7 @@ A portfolio-grade DevOps project: Go backend API deployed to a kind Kubernetes c
 ## Project Structure
 ```
 app/                    → Go backend (cmd/server, internal/handlers, metrics, services)
+deploy/helm/devops-api/ → Helm chart (alternative to raw manifests)
 deploy/k8s/base/        → Core K8s manifests (deployment, service, ingress, hpa, vpa, configmap)
 deploy/k8s/monitoring/  → Prometheus + Grafana deployments
 deploy/k8s/kustomize/   → Dev and prod overlays
@@ -35,9 +36,26 @@ assets/images/          → Screenshots for README
 - **Kind cluster name:** `devops-cluster`
 - **Local port mappings:** 8081→80, 8443→443, 30300→30300 (avoids conflicts)
 
+## Git Workflow
+- **Never push directly to `main`.** All changes go through pull requests.
+- Branch from `main` using naming convention: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`
+- Create a GitHub issue first, then reference it in the PR with `Closes #N`
+- Assign PRs and issues to `goldenbutter` with appropriate labels (`enhancement`, `bug`, `documentation`)
+- Commit messages follow: `<type>: <short description>` (types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`)
+- PRs are **squash merged** to keep `main` history clean
+- **Delete feature branch** after merge (both remote and local)
+- Keep commit messages concise — no verbose descriptions
+
+## CI/CD Pipeline
+- **CI** (`ci.yaml`): Runs on all pushes and PRs — Go vet, test, Docker build
+- **CD** (`cd.yaml`): Runs on push to `main` — builds and pushes to Docker Hub
+- GitHub Secrets configured: `DOCKER_USERNAME`, `DOCKER_PASSWORD` (Docker Hub access token)
+- `gh` CLI is installed and authenticated as `goldenbutter`
+
 ## Security Rules
 - No hardcoded secrets — Docker Hub creds via GitHub Secrets, AWS via CLI/env
 - `.env` and `terraform.tfvars` are in `.gitignore`
+- `/ec2/` folder is gitignored (contains .pem keys and local-only files)
 - Grafana default admin/admin is acceptable for local dev only
 
 ## Attribution
@@ -58,3 +76,10 @@ kubectl port-forward svc/devops-api 8080:80   # Access API
 bash scripts/load-test.sh          # 50 concurrent workers, 60s
 kubectl get hpa devops-api -w      # Watch autoscaling
 ```
+
+## EC2 Deployment
+- Use `t3.medium` (2 vCPU, 4 GB) or larger — `t2.micro` is too small for full stack
+- EC2 root volume must be ≥30 GB (AMI requirement)
+- Full walkthrough: [docs/ec2-testing-guide.md](docs/ec2-testing-guide.md)
+- Always `terraform destroy` after testing to avoid charges
+- EC2-specific files (`.pem`, HTML templates) go in `/ec2/` folder (gitignored)

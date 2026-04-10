@@ -1,0 +1,33 @@
+DevOps API deployed successfully!
+
+1. Get the API URL:
+{{- if .Values.ingress.enabled }}
+   http://{{ .Values.ingress.host }}/
+{{- else }}
+   kubectl port-forward svc/{{ include "devops-api.fullname" . }} 8080:{{ .Values.service.port }}
+   http://localhost:8080/
+{{- end }}
+
+2. API endpoints:
+   GET /          — Health check
+   GET /api/data  — System info
+   GET /api/calc  — CPU-intensive calculation (triggers HPA)
+   GET /metrics   — Prometheus metrics
+
+{{- if .Values.grafana.enabled }}
+
+3. Access Grafana:
+{{- if eq .Values.grafana.service.type "NodePort" }}
+   http://<node-ip>:{{ .Values.grafana.service.nodePort }}
+{{- else }}
+   kubectl port-forward svc/{{ include "devops-api.fullname" . }}-grafana 3000:{{ .Values.grafana.service.port }}
+   http://localhost:3000
+{{- end }}
+   Login: {{ .Values.grafana.adminUser }} / {{ .Values.grafana.adminPassword }}
+{{- end }}
+
+{{- if .Values.hpa.enabled }}
+
+4. Watch autoscaling:
+   kubectl get hpa {{ include "devops-api.fullname" . }} -w
+{{- end }}

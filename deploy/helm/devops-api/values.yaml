@@ -1,0 +1,103 @@
+# -- Number of replicas (ignored when HPA is enabled)
+replicaCount: 2
+
+image:
+  repository: goldenbutter/devops-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: devops-api.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+# -- Application config injected as environment variables
+config:
+  APP_ENV: "production"
+  APP_VERSION: "1.0.0"
+  LOG_LEVEL: "info"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+livenessProbe:
+  path: /
+  port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  path: /
+  port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Horizontal Pod Autoscaler
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  cpuTarget: 50
+  memoryTarget: 70
+  scaleDown:
+    stabilizationWindowSeconds: 300
+    maxPodsPerMinute: 1
+  scaleUp:
+    stabilizationWindowSeconds: 30
+    maxPodsPerMinute: 4
+
+# -- Vertical Pod Autoscaler (Off mode — recommendations only)
+vpa:
+  enabled: true
+  updateMode: "Off"
+  minCpu: 25m
+  minMemory: 32Mi
+  maxCpu: 1
+  maxMemory: 512Mi
+
+# -- Prometheus monitoring
+prometheus:
+  enabled: true
+  image: prom/prometheus:v2.50.1
+  retention: 15d
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- Grafana dashboards
+grafana:
+  enabled: true
+  image: grafana/grafana:latest
+  adminUser: admin
+  adminPassword: admin
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30300
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
