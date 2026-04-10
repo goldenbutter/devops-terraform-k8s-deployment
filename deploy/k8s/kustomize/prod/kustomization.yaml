@@ -1,0 +1,49 @@
+# Prod overlay — higher replica count and more generous resource limits.
+# Apply with: kubectl apply -k deploy/k8s/kustomize/prod/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the shared base manifests.
+resources:
+  - ../../base
+
+# Prefix all resource names so they don't collide with other environments.
+namePrefix: prod-
+
+# Common labels added to every resource in this overlay.
+commonLabels:
+  environment: prod
+
+# Patch the deployment for production capacity.
+patches:
+  - target:
+      kind: Deployment
+      name: devops-api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "128Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "256Mi"
+
+  # Prod scales up to 10 replicas for real traffic.
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: devops-api
+    patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 10

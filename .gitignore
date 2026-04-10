@@ -1,0 +1,43 @@
+# Environment variables and secrets — never commit these
+.env
+.env.local
+.env.production
+*.env
+# Allow the example template (contains no real secrets)
+!.env.example
+
+# Terraform state and local files — contain sensitive data
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+crash.log
+
+# Go build artifacts
+app/devops-api
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test and coverage output
+*.test
+*.out
+coverage.html
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.tar
+
+# kind cluster config (local only)
+kind-config.yaml

@@ -1,0 +1,70 @@
+# Deployment for the devops-api Go backend.
+# Runs 2 replicas behind a ClusterIP service with resource limits
+# so the HPA can make informed scaling decisions based on actual usage.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-api
+  labels:
+    app: devops-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-api
+  template:
+    metadata:
+      labels:
+        app: devops-api
+      # Prometheus can discover pods via this annotation and scrape /metrics
+      # automatically when using the common pod-monitor pattern.
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: devops-api
+          image: goldenbutter/devops-api:latest
+          # Use IfNotPresent so kind uses the locally loaded image
+          # instead of trying to pull from Docker Hub.
+          # Change to Always when deploying to a real cluster with a registry.
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          # Inject configuration from the configmap so the app can read
+          # APP_ENV, APP_VERSION, and LOG_LEVEL at runtime.
+          envFrom:
+            - configMapRef:
+                name: devops-api-config
+          # Resource requests are what the scheduler guarantees to the pod.
+          # Limits are the ceiling — exceeding CPU gets throttled, exceeding
+          # memory triggers an OOMKill.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          # Liveness probe restarts the container if the health endpoint
+          # stops responding — catches deadlocks and fatal panics.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Readiness probe removes the pod from service endpoints until
+          # it is ready to handle traffic — prevents routing to a cold pod.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3

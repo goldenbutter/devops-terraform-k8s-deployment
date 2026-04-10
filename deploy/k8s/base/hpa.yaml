@@ -1,0 +1,51 @@
+# Horizontal Pod Autoscaler for devops-api.
+# Scales between 2 and 10 replicas based on CPU and memory utilisation.
+# The /api/calc endpoint generates enough CPU load to trigger scale-up
+# during load tests, demonstrating real autoscaling behaviour.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: devops-api
+  labels:
+    app: devops-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: devops-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    # Scale up when average CPU across all pods exceeds 50% of the
+    # requested CPU (50 m → threshold is 25 m per pod).
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    # Scale up when average memory across all pods exceeds 70% of the
+    # requested memory (64 Mi → threshold is ~45 Mi per pod).
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    # Conservative scale-down to avoid flapping: wait 5 minutes of low
+    # load before removing pods, and remove at most 1 pod per minute.
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    # Aggressive scale-up: respond to traffic spikes within 30 seconds,
+    # adding up to 4 pods at a time.
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 60

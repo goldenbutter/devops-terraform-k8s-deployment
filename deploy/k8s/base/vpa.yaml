@@ -1,0 +1,30 @@
+# Vertical Pod Autoscaler in "Off" mode — generates resource recommendations
+# without applying them. This is useful for right-sizing: review the
+# suggestions and manually update deployment resource requests/limits.
+#
+# Requires the VPA controller to be installed in the cluster:
+#   kubectl apply -f https://github.com/kubernetes/autoscaler/releases/latest/download/vpa-v1-crd-gen.yaml
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: devops-api
+  labels:
+    app: devops-api
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: devops-api
+  # "Off" means the VPA only produces recommendations — it never mutates pods.
+  # Check recommendations with: kubectl describe vpa devops-api
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: devops-api
+        minAllowed:
+          cpu: 25m
+          memory: 32Mi
+        maxAllowed:
+          cpu: 1
+          memory: 512Mi

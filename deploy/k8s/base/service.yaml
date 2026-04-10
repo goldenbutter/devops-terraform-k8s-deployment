@@ -1,0 +1,19 @@
+# ClusterIP service for the devops-api deployment.
+# Exposes the pods on a stable internal DNS name (devops-api.default.svc)
+# so other in-cluster consumers (Prometheus, Ingress) can reach them
+# without tracking individual pod IPs.
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-api
+  labels:
+    app: devops-api
+spec:
+  type: ClusterIP
+  selector:
+    app: devops-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP

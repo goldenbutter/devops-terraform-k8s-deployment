@@ -1,0 +1,43 @@
+# Continuous Integration — runs on every push and pull request to main.
+# Validates Go code with vet, runs tests, and builds the Docker image
+# to confirm nothing is broken before merging.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository so subsequent steps can access the code.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install the Go toolchain matching the version in go.mod.
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: app/go.sum
+
+      # go vet catches common mistakes the compiler doesn't flag
+      # (e.g. printf format mismatches, unreachable code).
+      - name: Run go vet
+        working-directory: ./app
+        run: go vet ./...
+
+      # Run the full test suite. -v for verbose output in CI logs.
+      - name: Run tests
+        working-directory: ./app
+        run: go test -v ./...
+
+      # Build the Docker image to confirm the Dockerfile and Go build
+      # both succeed — catches broken dependencies early.
+      - name: Build Docker image
+        run: |
+          docker build -t goldenbutter/devops-api:ci-${{ github.sha }} ./app

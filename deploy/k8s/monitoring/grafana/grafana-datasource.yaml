@@ -1,0 +1,21 @@
+# Grafana datasource provisioning ConfigMap.
+# Mounted at /etc/grafana/provisioning/datasources/ inside the Grafana pod.
+# On startup, Grafana reads this file and registers Prometheus as the
+# default data source — no manual setup required.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource
+  labels:
+    app: grafana
+data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        # Cluster-internal DNS for the Prometheus ClusterIP service.
+        url: http://prometheus.default.svc.cluster.local:9090
+        isDefault: true
+        editable: true

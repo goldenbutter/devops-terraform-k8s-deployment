@@ -1,0 +1,32 @@
+# Prometheus configuration stored as a ConfigMap.
+# Mounted into the Prometheus pod at /etc/prometheus/prometheus.yml.
+# Defines two scrape targets: the devops-api service and Prometheus itself.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    # Global defaults applied to all scrape jobs unless overridden.
+    global:
+      scrape_interval: 15s        # How often to pull metrics from targets.
+      evaluation_interval: 15s    # How often to evaluate alerting rules.
+
+    scrape_configs:
+      # Scrape the devops-api service on its /metrics endpoint.
+      # The service DNS name resolves to all matching pod IPs,
+      # so Prometheus automatically discovers every replica.
+      - job_name: "devops-api"
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["devops-api.default.svc.cluster.local:80"]
+            labels:
+              app: "devops-api"
+
+      # Prometheus scrapes its own /metrics for self-monitoring.
+      # This lets you dashboard Prometheus health inside Grafana.
+      - job_name: "prometheus"
+        static_configs:
+          - targets: ["localhost:9090"]

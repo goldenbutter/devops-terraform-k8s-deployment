@@ -1,0 +1,13 @@
+# ConfigMap injected into the devops-api pods via envFrom.
+# Keeps runtime configuration out of the container image so the same
+# image can be promoted across environments by swapping the configmap.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-api-config
+  labels:
+    app: devops-api
+data:
+  APP_ENV: "production"
+  APP_VERSION: "1.0.0"
+  LOG_LEVEL: "info"

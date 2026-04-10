@@ -1,0 +1,24 @@
+# Ingress routes external HTTP traffic to the devops-api service.
+# Uses the nginx ingress controller (installed separately in kind).
+# For local testing, add "127.0.0.1 devops-api.local" to /etc/hosts.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-api
+  labels:
+    app: devops-api
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: devops-api.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: devops-api
+                port:
+                  number: 80
