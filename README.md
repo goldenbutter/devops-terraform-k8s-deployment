@@ -1,6 +1,29 @@
 # DevOps Terraform K8s Deployment
 
-Production-grade DevOps pipeline that provisions AWS infrastructure with Terraform, deploys a Go backend API to a Kubernetes cluster (kind), and monitors everything with Prometheus and Grafana.
+**Production-grade DevOps pipeline with HPA/VPA autoscaling, CI/CD, and Prometheus + Grafana monitoring.**
+
+Provisions AWS infrastructure with Terraform, deploys a Go backend API to Kubernetes (kind), and monitors everything end-to-end.
+
+## Table of Contents
+
+| Section | Description |
+|---------|-------------|
+| [Documentation](#documentation) | Guides for architecture, Terraform, scaling, monitoring, and EC2 |
+| [Architecture](#architecture) | System overview diagram |
+| [Features](#features) | Full feature list |
+| [Prerequisites](#prerequisites) | Required tools and versions |
+| [Quick Start](#quick-start-local-with-kind) | Local deployment with kind |
+| [Deploy with Helm](#deploy-with-helm-alternative) | Helm chart deployment |
+| [Deploy to AWS](#deploy-to-aws) | Terraform + EC2 deployment |
+| [Folder Structure](#folder-structure) | Full project tree |
+| [API Endpoints](#api-endpoints) | Available routes |
+| [Load Testing](#load-testing--autoscaling) | HPA/VPA testing commands |
+| [Grafana](#accessing-grafana) | Dashboard access and setup |
+| [CI/CD Pipeline](#cicd-pipeline) | GitHub Actions runs and Docker Hub proof |
+| [Screenshots](#screenshots) | Local and EC2 deployment screenshots |
+| [Tech Stack](#tech-stack) | Technologies used |
+| [Contributing](#contributing) | How to contribute |
+| [License](#license) | MIT License |
 
 ## Documentation
 
@@ -43,6 +66,9 @@ Production-grade DevOps pipeline that provisions AWS infrastructure with Terrafo
 
 ## Quick Start (Local with kind)
 
+<details>
+<summary>Clone, build, deploy, and test in 6 steps</summary>
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/goldenbutter/devops-terraform-k8s-deployment.git
@@ -67,9 +93,14 @@ bash scripts/load-test.sh
 kubectl get hpa devops-api -w
 ```
 
+</details>
+
 ## Deploy with Helm (Alternative)
 
 The project includes a Helm chart that packages all K8s manifests (app, monitoring, autoscaling) into a single deployable unit.
+
+<details>
+<summary>Helm install, upgrade, and custom values</summary>
 
 ```bash
 # Preview rendered templates
@@ -93,9 +124,14 @@ helm uninstall devops-api
 
 The chart deploys: Deployment, Service, Ingress, ConfigMap, HPA, VPA, Prometheus, and Grafana — all configurable via `deploy/helm/devops-api/values.yaml`.
 
+</details>
+
 ## Deploy to AWS
 
 > For the full step-by-step walkthrough (key pair creation, troubleshooting, cost estimate), see [docs/terraform-setup.md](docs/terraform-setup.md).
+
+<details>
+<summary>Terraform provision + EC2 deploy steps</summary>
 
 ```bash
 # 1. Configure AWS credentials
@@ -124,7 +160,12 @@ kubectl apply -f deploy/k8s/monitoring/prometheus/
 kubectl apply -f deploy/k8s/monitoring/grafana/
 ```
 
+</details>
+
 ## Folder Structure
+
+<details>
+<summary>Full project tree</summary>
 
 ```
 devops-terraform-k8s-deployment/
@@ -182,6 +223,8 @@ devops-terraform-k8s-deployment/
     └── terraform-setup.md
 ```
 
+</details>
+
 ## API Endpoints
 
 | Endpoint     | Method | Description                                    |
@@ -195,6 +238,9 @@ devops-terraform-k8s-deployment/
 
 > Full guide with expected results and troubleshooting: [docs/scaling-tests.md](docs/scaling-tests.md)
 
+<details>
+<summary>Load test commands and HPA/VPA monitoring</summary>
+
 ```bash
 # Run load test (50 concurrent workers, 60 seconds)
 bash scripts/load-test.sh
@@ -206,18 +252,58 @@ kubectl get hpa devops-api -w
 kubectl describe vpa devops-api
 ```
 
+</details>
+
 ## Accessing Grafana
 
 > Full guide with PromQL queries, dashboard layout, and panel setup: [docs/monitoring-dashboards.md](docs/monitoring-dashboards.md)
+
+<details>
+<summary>Grafana login and dashboard setup</summary>
 
 1. Open `http://localhost:30300` (kind) or `http://<ec2-ip>:30300` (AWS)
 2. Login with `admin` / `admin`
 3. Prometheus is pre-configured as the default datasource
 4. Import dashboard ID `1860` for Node Exporter or create custom dashboards
 
+</details>
+
+## CI/CD Pipeline
+
+GitHub Actions runs CI on every push/PR (go vet, tests, Docker build) and CD on merge to main (build + push to Docker Hub).
+
+<details>
+<summary>GitHub Actions — All Workflow Runs</summary>
+
+![GitHub Actions Runs](assets/images/github-actions-runs.png)
+
+</details>
+
+<details>
+<summary>CI — Build & Test Detail (go vet, tests, Docker build)</summary>
+
+![CI Run Detail](assets/images/ci-run-detail.png)
+
+</details>
+
+<details>
+<summary>CD — Deploy Detail (Docker Hub login, build, push)</summary>
+
+![CD Run Detail](assets/images/cd-run-detail.png)
+
+</details>
+
+<details>
+<summary>Docker Hub — Pushed Image</summary>
+
+![Docker Hub Image](assets/images/dockerhub-image.png)
+
+</details>
+
 ## Screenshots
 
-### Local (kind) — API Responses
+<details>
+<summary>Local (kind) — API Responses</summary>
 
 **Health Check** — `GET /`
 
@@ -231,7 +317,10 @@ kubectl describe vpa devops-api
 
 ![API Calc Response](assets/images/api-calc-response.png)
 
-### Local (kind) — Kubernetes Cluster
+</details>
+
+<details>
+<summary>Local (kind) — Kubernetes Cluster</summary>
 
 **Running Pods**
 
@@ -241,7 +330,10 @@ kubectl describe vpa devops-api
 
 ![HPA and Services](assets/images/hpa-and-services.png)
 
-### Local (kind) — Monitoring Stack
+</details>
+
+<details>
+<summary>Local (kind) — Monitoring Stack</summary>
 
 **Grafana Home** — Auto-provisioned Prometheus datasource
 
@@ -255,7 +347,10 @@ kubectl describe vpa devops-api
 
 ![Grafana Explore Metrics](assets/images/grafana-explore-metrics.png)
 
-### AWS EC2 — API Responses
+</details>
+
+<details>
+<summary>AWS EC2 — API Responses</summary>
 
 **Health Check** — `GET /` on EC2
 
@@ -269,7 +364,10 @@ kubectl describe vpa devops-api
 
 ![EC2 API Calc Response](assets/images/ec2-api-calc-response.png)
 
-### AWS EC2 — Kubernetes Cluster
+</details>
+
+<details>
+<summary>AWS EC2 — Kubernetes Cluster</summary>
 
 **Running Pods** — All 4 pods healthy on EC2 (t3.medium, us-east-1)
 
@@ -279,7 +377,10 @@ kubectl describe vpa devops-api
 
 ![EC2 HPA and Services](assets/images/ec2-hpa-and-services.png)
 
-### AWS EC2 — Monitoring Stack
+</details>
+
+<details>
+<summary>AWS EC2 — Monitoring Stack</summary>
 
 **Grafana Home** — Accessible at `http://<ec2-ip>:30300`
 
@@ -293,7 +394,10 @@ kubectl describe vpa devops-api
 
 ![EC2 Grafana Explore Metrics](assets/images/ec2-grafana-explore-metrics.png)
 
-### AWS EC2 — HPA Autoscaling Demo
+</details>
+
+<details>
+<summary>AWS EC2 — HPA Autoscaling Demo</summary>
 
 **Idle State** — 2 replicas, CPU at 2% (well below 50% threshold)
 
@@ -310,6 +414,8 @@ kubectl describe vpa devops-api
 **VPA Recommendations** — Right-sizing suggestions (Off mode, no auto-apply)
 
 ![EC2 VPA Recommendations](assets/images/ec2-vpa-recommendations.png)
+
+</details>
 
 ## Tech Stack
 
