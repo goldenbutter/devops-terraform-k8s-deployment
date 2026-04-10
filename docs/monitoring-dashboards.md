@@ -142,6 +142,28 @@ go_goroutines
 go_gc_duration_seconds
 ```
 
+## Screenshots
+
+### Grafana Home — Auto-provisioned Prometheus datasource
+
+![Grafana Home](../assets/images/grafana-home.png)
+
+### Grafana Datasource — Prometheus connected
+
+![Grafana Datasource](../assets/images/grafana-datasource.png)
+
+### Grafana Explore — Live `http_requests_total` metrics
+
+![Grafana Explore](../assets/images/grafana-explore-metrics.png)
+
+### EC2 — Grafana with Prometheus datasource
+
+![EC2 Grafana Datasource](../assets/images/ec2-grafana-datasource.png)
+
+### EC2 — Request rate spike during load test
+
+![EC2 Grafana Load Spike](../assets/images/ec2-grafana-load-spike.png)
+
 ## Recommended Dashboard Layout
 
 | Row | Panel 1 | Panel 2 | Panel 3 |

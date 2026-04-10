@@ -29,6 +29,14 @@ docs/                   → Architecture, scaling, monitoring, and Terraform gui
 assets/images/          → Screenshots for README
 ```
 
+## Helm Chart
+- Chart lives at `deploy/helm/devops-api/`
+- Configurable via `values.yaml` — replicas, resources, HPA/VPA thresholds, monitoring toggles
+- Templates: Deployment, Service, Ingress, ConfigMap, HPA, VPA, Prometheus, Grafana
+- Preview: `helm template devops-api deploy/helm/devops-api`
+- Install: `helm install devops-api deploy/helm/devops-api`
+- Raw K8s manifests in `deploy/k8s/` are kept side-by-side for `kubectl apply` use
+
 ## Key Conventions
 - **Labels:** All K8s resources use `app: devops-api`
 - **Image:** `goldenbutter/devops-api:latest` with `imagePullPolicy: IfNotPresent` for kind

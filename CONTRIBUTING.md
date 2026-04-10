@@ -141,8 +141,10 @@ Here are some areas where contributions are welcome:
 
 - **New API endpoints** — Add useful endpoints to the Go backend
 - **Dashboard templates** — Pre-built Grafana dashboards for the existing metrics
-- **Helm chart** — Package the K8s manifests as a Helm chart
 - **Multi-node kind** — Add support for multi-node local clusters
+- **Network Policies** — Add K8s NetworkPolicies to restrict pod-to-pod traffic
+- **ArgoCD / GitOps** — Set up ArgoCD for declarative, Git-driven deployments
+- **EKS module** — Add a Terraform module for managed Kubernetes on AWS (EKS)
 - **Test coverage** — Add unit and integration tests for the Go handlers
 - **Documentation** — Improve guides, fix typos, add diagrams
 

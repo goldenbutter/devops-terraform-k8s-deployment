@@ -43,6 +43,34 @@ kubectl get hpa devops-api -w
 bash scripts/load-test.sh http://localhost:8080 50 60
 ```
 
+### Expected Load Test Output
+
+```
+============================================
+  Load Test — devops-api
+============================================
+  Target:      http://localhost:8080/api/calc
+  Concurrency: 50 workers
+  Duration:    60 seconds
+============================================
+
+Starting 50 workers...
+
+============================================
+  Results
+============================================
+  Duration:   62s
+  Total:      1847 requests
+  Success:    1847 (HTTP 200)
+  Failed:     0
+  Throughput: ~29 req/s
+============================================
+
+Check HPA status: kubectl get hpa devops-api -w
+```
+
+> Numbers vary by machine — on EC2 (t3.medium) expect ~25–35 req/s; on local kind expect ~15–25 req/s.
+
 ### Step 3 — Observe scaling
 
 Within 30–60 seconds you should see:
@@ -116,6 +144,28 @@ kubectl get pods -l app=devops-api
 # Reset back — HPA will resume control
 kubectl scale deployment devops-api --replicas=2
 ```
+
+## Screenshots
+
+### HPA — Idle state (2 replicas, low CPU)
+
+![HPA Idle](../assets/images/ec2-hpa-idle.png)
+
+### HPA — Scaling under load (2→5 pods)
+
+![HPA Scaling](../assets/images/ec2-hpa-scaling.png)
+
+### HPA & Services overview
+
+![HPA and Services](../assets/images/ec2-hpa-and-services.png)
+
+### VPA — Recommendations (Off mode, recommend only)
+
+![VPA Recommendations](../assets/images/ec2-vpa-recommendations.png)
+
+### Grafana — Request rate spike during load test
+
+![Grafana Load Spike](../assets/images/ec2-grafana-load-spike.png)
 
 ## Troubleshooting
 
